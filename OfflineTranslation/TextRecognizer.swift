@@ -105,38 +105,38 @@ class TextRecognizer {
             completion("", "Unknown")
             return
         }
-
+        
         let request: VNRecognizeTextRequest = VNRecognizeTextRequest { request, error in
             if let error = error {
                 print("🚨 ERROR: Apple Vision OCR failed - \(error.localizedDescription)")
                 completion("", "Unknown")
                 return
             }
-
+            
             guard let observations: [VNRecognizedTextObservation] = request.results as? [VNRecognizedTextObservation] else {
                 print("🚨 ERROR: No text observations found")
                 completion("", "Unknown")
                 return
             }
-
+            
             let extractedText = observations.compactMap { observation -> String? in
                 observation.topCandidates(1).first?.string
             }.joined(separator: "\n")
-
+            
             if extractedText.isEmpty {
                 print("⚠️ Apple Vision OCR: No text detected")
                 completion("", "Unknown")
                 return
             }
-
+            
             print("✅ Apple Vision OCR: Text detected")
             let detectedLanguage = self.detectLanguage(for: extractedText)
             completion(extractedText, detectedLanguage)
         }
-
+        
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = true
-
+        
         let requestHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
         DispatchQueue.global(qos: .userInitiated).async {
             do {
@@ -220,8 +220,7 @@ class TextRecognizer {
         // Sort hypotheses by probability in descending order
         let sortedHypotheses = hypotheses.sorted { $0.value > $1.value }
         
-        // Track total probability and displayed probability
-        let totalProbability = hypotheses.values.reduce(0, +)
+        // Track displayed probability
         var displayedProbability: Double = 0
         
         // Display languages with probability > 0.05
@@ -231,8 +230,8 @@ class TextRecognizer {
             displayedProbability += probability
         }
         
-        // Calculate and display "Other" category if there are remaining probabilities
-        let otherProbability = totalProbability - displayedProbability
+        // Calculate "Other" as 1 - displayed probability (instead of totalProbability)
+        let otherProbability = max(0, 1.0 - displayedProbability) // Ensure it's not negative
         if otherProbability > 0.001 { // Only show if it's meaningful (> 0.1%)
             print("   - (Other): \(String(format: "%.2f", otherProbability * 100))%")
         }

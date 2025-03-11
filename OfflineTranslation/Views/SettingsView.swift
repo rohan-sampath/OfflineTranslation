@@ -1,9 +1,14 @@
 import SwiftUI
 import Foundation
+import Translation
 
 struct SettingsView: View {
     @AppStorage("selectedOCRModel") private var selectedModel = OCRModel.appleVision
     @AppStorage("translationUIStyle") private var translationUIStyle = TranslationUIStyle.modalSheet
+    @AppStorage("defaultTargetLanguage") private var defaultTargetLanguage = "en"
+    
+    @State private var availableLanguages: [AvailableLanguage] = []
+    @State private var isLoadingLanguages = true
     
     var body: some View {
         NavigationView {
@@ -33,13 +38,53 @@ struct SettingsView: View {
                 }
                 
                 Section(
+                    header: Text("Default Target Language"),
+                    footer: Text("The list of supported languages is determined by the ones supported by Apple's Translation API. A language must be downloaded before it can be used in a translation.")
+                ) {
+                    if isLoadingLanguages {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                                .padding()
+                            Spacer()
+                        }
+                    } else {
+                        Picker("Target Language", selection: $defaultTargetLanguage) {
+                            ForEach(availableLanguages, id: \.id) { language in
+                                Text(language.localizedName())
+                                    .tag(language.locale.languageCode?.identifier ?? "en")
+                            }
+                        }
+                        .pickerStyle(.navigationLink)
+                    }
+                }
+                
+                Section(
                     header: Text("About Offline Translation"), 
                     footer: Text("This app uses on-device machine learning models to recognize and translate text in images.\n\n Different models work better for different languages and scripts. If no text is detected, the app will automatically try other models.")
                 ) {
                 }
             }
             .navigationTitle("Settings")
+            .task {
+                await loadSupportedLanguages()
+            }
         }
+    }
+    
+    private func loadSupportedLanguages() async {
+        isLoadingLanguages = true
+        do {
+            let availability = LanguageAvailability()
+            let supportedLanguages = await availability.supportedLanguages
+            
+            // Convert to AvailableLanguage objects and sort alphabetically
+            availableLanguages = supportedLanguages.map { AvailableLanguage(locale: $0) }
+                .sorted()
+        } catch {
+            print("Error loading supported languages: \(error)")
+        }
+        isLoadingLanguages = false
     }
 }
 
