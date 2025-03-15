@@ -93,9 +93,9 @@ struct ContentView: View {
             .sheet(isPresented: $isSettingsPresented) {
                 SettingsView()
             }
-            // .if(translationUIStyle == .modalSheet) { view in
-            //     view.translationPresentation(isPresented: $showTranslationSheet, text: recognizedText)
-            // }
+            .if(translationUIStyle == .modalSheet) { view in
+            view.translationPresentation(isPresented: $showTranslationSheet, text: recognizedText)
+            }
             .onChange(of: translationUIStyle) { _, newValue in
                 // if newValue == .inlineDisplay && !recognizedText.isEmpty && detectedLanguage != "Unknown" {
                 //     translationManager.translateText(recognizedText)
