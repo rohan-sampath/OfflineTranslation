@@ -44,15 +44,23 @@ struct PhotoPicker: UIViewControllerRepresentable {
                     DispatchQueue.main.async {
                         if let uiImage = image as? UIImage {
                             self.parent.selectedImage = uiImage
-
+                            
+                            print("📸 PhotoPicker: Image selected, about to call TextRecognizer")
+                            
                             // Perform text recognition and language detection
                             TextRecognizer().recognizeText(in: uiImage) { recognizedText, detectedLanguage in
+                                print("📝 TextRecognizer: Text recognition completed")
+                                print("📝 Recognized text: \(recognizedText.prefix(50))")
+                                print("🌐 Detected language: \(detectedLanguage)")
+                                
                                 self.parent.recognizedText = recognizedText
                                 self.parent.detectedLanguage = detectedLanguage
                                 
                                 // Call the callback if provided
                                 self.parent.onTextRecognized?(recognizedText, detectedLanguage)
                             }
+                        } else {
+                            print("❌ PhotoPicker: Failed to get UIImage from selected photo")
                         }
                     }
                 }

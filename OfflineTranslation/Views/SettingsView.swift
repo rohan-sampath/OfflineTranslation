@@ -5,13 +5,13 @@ import Translation
 struct SettingsView: View {
     @AppStorage("selectedOCRModel") private var selectedModel = OCRModel.appleVision
     @AppStorage("translationUIStyle") private var translationUIStyle = TranslationUIStyle.modalSheet
-    @AppStorage("defaultTargetLanguage") private var defaultTargetLanguage = "en"
+    @AppStorage("defaultTargetLanguage") private var defaultTargetLanguage = "en_US"
     
     @State private var availableLanguages: [AvailableLanguage] = []
     @State private var isLoadingLanguages = true
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("Text Recognition Model")) {
                     Picker("OCR Model", selection: $selectedModel) {
@@ -39,7 +39,7 @@ struct SettingsView: View {
                 
                 Section(
                     header: Text("Default Target Language"),
-                    footer: Text("The list of supported languages is determined by the ones supported by Apple's Translation API. A language must be downloaded before it can be used in a translation.")
+                    footer: Text("This is the default language that text will be translated to. Apple's Translation API determines the list of supported languages. A language must be downloaded before it can be used in a translation.")
                 ) {
                     if isLoadingLanguages {
                         HStack {
@@ -51,8 +51,7 @@ struct SettingsView: View {
                     } else {
                         Picker("Target Language", selection: $defaultTargetLanguage) {
                             ForEach(availableLanguages, id: \.id) { language in
-                                Text(language.localizedName())
-                                    .tag(language.locale.languageCode?.identifier ?? "en")
+                                Text(language.localizedName()).tag(language.shortName())
                             }
                         }
                         .pickerStyle(.navigationLink)
@@ -66,28 +65,15 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .task {
-                await loadSupportedLanguages()
-            }
+            .withSupportedLanguages(
+                availableLanguages: $availableLanguages,
+                isLoading: $isLoadingLanguages
+            )
         }
-    }
-    
-    private func loadSupportedLanguages() async {
-        isLoadingLanguages = true
-        do {
-            let availability = LanguageAvailability()
-            let supportedLanguages = await availability.supportedLanguages
-            
-            // Convert to AvailableLanguage objects and sort alphabetically
-            availableLanguages = supportedLanguages.map { AvailableLanguage(locale: $0) }
-                .sorted()
-        } catch {
-            print("Error loading supported languages: \(error)")
-        }
-        isLoadingLanguages = false
     }
 }
 
 #Preview {
     SettingsView()
 }
+

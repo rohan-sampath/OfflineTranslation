@@ -6,35 +6,58 @@ struct RecognizedTextView: View {
     let translationUIStyle: TranslationUIStyle
     let translateAction: () -> Void
     
+    @State private var isButtonDisabled: Bool = false
+    @State private var showFullText: Bool = false
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("**Language:** \(detectedLanguage)")
-                .font(.headline)
-                .foregroundColor(.blue)
-            
-            if !recognizedText.isEmpty && translationUIStyle == .modalSheet {
-                Button(action: translateAction) {
-                    Text("Translate")
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.7))
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
+        GeometryReader { geometry in
+            VStack(alignment: .leading, spacing: 16) {
+                
+                // Detected Language
+                Text(detectedLanguage == "No Text Detected" ? "No Text Detected" : "**Detected Language:** \(detectedLanguage)")
+                    .font(.headline)
+                    .foregroundColor(.blue)
+                
+                // Recognized Text
+                if !recognizedText.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("**Original Text:**")
+                            .font(.headline)
+                        
+                        Text(recognizedText)
+                            .lineLimit(showFullText ? nil : 8)
+                            .fixedSize(horizontal: false, vertical: true) // Allow multiline
+                            .padding(.horizontal)
+                        
+                        if recognizedText.count > 100 { // Show the button only for longer text
+                            Button(showFullText ? "Show Less" : "Show More") {
+                                withAnimation {
+                                    showFullText.toggle()
+                                }
+                            }
+                            .padding(.horizontal)
+                            .foregroundColor(.blue)
+                            .transition(.opacity)
+                        }
+                    }
                 }
-                .padding(.vertical, 8)
             }
-            
-            if !recognizedText.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("**Original Text:**")
-                        .font(.headline)
-                    
-                    Text(recognizedText)
-                        .padding(.horizontal)
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        TranslateButtonView(isDisabled: isButtonDisabled, action: translateAction)
+                            .padding()
+                    }
+                    .padding(.bottom, geometry.safeAreaInsets.bottom + 16)
                 }
-            }
+            )
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
+        .onChange(of: recognizedText) {
+            showFullText = false // Reset "Show More" button when text changes
+        }
     }
 }
