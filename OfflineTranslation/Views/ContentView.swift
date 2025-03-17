@@ -25,19 +25,18 @@ struct ContentView: View {
     @State private var sourceLanguage: String = "detect"
     @State private var targetLanguage: String = ""
     @State private var availableLanguages: [AvailableLanguage] = []
-    @State private var isLoadingLanguages = true
+    @State private var isLoadingLanguages: Bool = true
     
     @AppStorage("translationUIStyle") private var translationUIStyle = TranslationUIStyle.modalSheet
     
-    @StateObject private var translationManager = TranslationManager()
-    
+    @State private var shouldShowTranslationView: Bool = false
+
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 0) {
                     ImagePickerView(selectedImage: $selectedImage, isPickerPresented: $isPickerPresented, isImageSelected: $isImageSelected)
                     
-                    // Language pair view - always visible
                     if isLoadingLanguages {
                         ProgressView()
                             .padding()
@@ -57,13 +56,24 @@ struct ContentView: View {
                             detectedLanguage: detectedLanguage,
                             recognizedText: recognizedText,
                             translationUIStyle: translationUIStyle,
-                            translateAction: { showTranslationSheet = true }
+                            translateAction: {
+                                if !sourceLanguage.isEmpty && !targetLanguage.isEmpty && !recognizedText.isEmpty && translationUIStyle == .inlineDisplay {
+                                    shouldShowTranslationView = true
+                                    print("TOUJOURS SOUMIS")
+                                } 
+                                else if translationUIStyle == .modalSheet {
+                                        showTranslationSheet = true
+                                }
+                            }
                         )
                         
-                        // TranslationView(
-                        //     translationManager: translationManager,
-                        //     translationUIStyle: translationUIStyle
-                        // )
+                        if shouldShowTranslationView {
+                            TranslationView(
+                                sourceText: recognizedText,
+                                sourceLanguage: getLocaleLanguage(from: sourceLanguage),
+                                targetLanguage: getLocaleLanguage(from: targetLanguage)
+                            )
+                        }
                     }
                 }
                 .padding(.vertical)
@@ -77,56 +87,43 @@ struct ContentView: View {
                 PhotoPicker(selectedImage: $selectedImage, recognizedText: $recognizedText, detectedLanguage: $detectedLanguage) { text, language in
                     print("📲 ContentView: PhotoPicker callback received - text length: \(text.count), language: '\(language)'")
                     if text.isEmpty {
-                        print ("IS EMPTY")
+                        print("IS EMPTY")
                         detectedLanguage = "No Text Detected"
                     } else {
                         detectedLanguage = language
                     }
                     print("The new detected language is \(detectedLanguage)")
-                    //translationManager.cancelTranslation()
-                    if translationUIStyle == .inlineDisplay && !text.isEmpty && language != "Unknown" {
-                        print("🔄 ContentView: Starting inline translation")
-                        translationManager.translateText(text)
-                    }
                 }
             }
             .sheet(isPresented: $isSettingsPresented) {
                 SettingsView()
             }
             .if(translationUIStyle == .modalSheet) { view in
-            view.translationPresentation(isPresented: $showTranslationSheet, text: recognizedText)
-            }
-            .onChange(of: translationUIStyle) { _, newValue in
-                // if newValue == .inlineDisplay && !recognizedText.isEmpty && detectedLanguage != "Unknown" {
-                //     translationManager.translateText(recognizedText)
-                // }
+                view.translationPresentation(isPresented: $showTranslationSheet, text: recognizedText)
             }
             .withSupportedLanguages(
                 availableLanguages: $availableLanguages,
                 isLoading: $isLoadingLanguages
             )
             .onChange(of: sourceLanguage) { _, _ in
-                // updateTranslation()
+                shouldShowTranslationView = !sourceLanguage.isEmpty && !targetLanguage.isEmpty
             }
             .onChange(of: targetLanguage) { _, _ in
-                // updateTranslation()
+                shouldShowTranslationView = !sourceLanguage.isEmpty && !targetLanguage.isEmpty
             }
             .onChange(of: detectedLanguage) { _, newLanguage in
                 print("🔄 ContentView: onChange detected language change to '\(newLanguage)'")
-                if sourceLanguage == "detect" && newLanguage != "Unknown" {
-                    // updateTranslation()
-                }
+                shouldShowTranslationView = !sourceLanguage.isEmpty && !targetLanguage.isEmpty
             }
         }
     }
     
-    // private func updateTranslation() {
-    //     print("🔄 ContentView: updateTranslation called - text length: \(recognizedText.count), language: '\(detectedLanguage)'")
-    //     if !recognizedText.isEmpty && detectedLanguage != "Unknown" {
-    //         translationManager.cancelTranslation()
-    //         translationManager.translateText(recognizedText)
-    //     }
-    // }
+    // Helper function to convert string language code to Locale.Language
+    private func getLocaleLanguage(from languageCode: String) -> Locale.Language? {
+        return !languageCode.isEmpty && languageCode != "detect"
+            ? Locale.Language(identifier: languageCode.lowercased())
+            : nil
+    }
 }
 
 #Preview {

@@ -1,28 +1,69 @@
 import SwiftUI
+import Translation
 
 struct TranslationView: View {
-    let translationManager: TranslationManager
-    let translationUIStyle: TranslationUIStyle
+    let sourceText: String
+    let sourceLanguage: Locale.Language?
+    let targetLanguage: Locale.Language?
+    
+    @State private var translatedText = ""
+    @State private var translationError: Error?
+    @State private var configuration: TranslationSession.Configuration?
+    
+    init(
+        sourceText: String,
+        source: Locale.Language? = nil,
+        target: Locale.Language? = nil
+    ) {
+        self.sourceText = sourceText
+        self.sourceLanguage = source
+        self.targetLanguage = target
+    }
     
     var body: some View {
-        if translationUIStyle == .inlineDisplay && !translationManager.translatedText.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("**Translation:**")
-                    .font(.headline)
-                
-                Text(translationManager.translatedText)
-                    .padding(.horizontal)
+        VStack {
+            if !translatedText.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("**Translation:**")
+                        .font(.headline)
+                    
+                    Text(translatedText)
+                        .padding(.horizontal)
+                }
+            }
+            
+            if configuration != nil {
+                HStack {
+                    Text("Translating...")
+                    ProgressView()
+                }
+            } else if translationError != nil {
+                Text("Translation error: \(String(describing: translationError))")
+                    .foregroundColor(.red)
             }
         }
-        
-        if translationUIStyle == .inlineDisplay && translationManager.isTranslating {
-            HStack {
-                Text("Translating...")
-                ProgressView()
+        .translationTask(configuration) { session in
+            do {
+                let response = try await session.translate(sourceText)
+                translatedText = response.targetText
+                print ("Translation View: TRANSLATED TEXT: \(translatedText)")
+                configuration?.invalidate()
+            } catch {
+                translationError = error
+                configuration?.invalidate()
             }
-        } else if translationUIStyle == .inlineDisplay && translationManager.translationError != nil {
-            Text("Translation error: \(translationManager.translationError!)")
-                .foregroundColor(.red)
         }
+        .onAppear {
+            // Start translation immediately when view appears
+            startTranslation()
+        }
+    }
+    
+    private func startTranslation() {
+        // Initialize configuration with language parameters
+        configuration = .init(
+            source: sourceLanguage,
+            target: targetLanguage
+        )
     }
 }

@@ -69,7 +69,7 @@ struct SettingsView: View {
                 availableLanguages: $availableLanguages,
                 isLoading: $isLoadingLanguages
             )
-        }
+        }                              
     }
 }
 
