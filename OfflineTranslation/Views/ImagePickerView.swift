@@ -12,7 +12,7 @@ struct ImagePickerView: View {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
-                        .frame(maxHeight: UIScreen.main.bounds.height * 0.50)
+                        .frame(maxHeight: UIScreen.main.bounds.height * 0.40)
                         .frame(maxWidth: .infinity, alignment: .center)
 
                     // Buttons overlay

@@ -19,7 +19,7 @@ struct TranslationSection: View {
     @State private var showTranslationSheet = false
 
     var body: some View {
-        VStack {
+        VStack(spacing: 20) {
             RecognizedTextView(
                 detectedLanguage: detectedLanguage,
                 recognizedText: recognizedText,
@@ -35,17 +35,23 @@ struct TranslationSection: View {
             )
 
             if shouldShowTranslationView {
+                Divider()
                 TranslationView(
                     sourceText: recognizedText,
                     sourceLanguage: getLocaleLanguage(from: sourceLanguage),
                     targetLanguage: getLocaleLanguage(from: targetLanguage)
                 )
+                .padding(.vertical)
             }
         }
         .if(translationUIStyle == .modalSheet) { view in
                 view.translationPresentation(isPresented: $showTranslationSheet, text: recognizedText)
+        }.onAppear {
+            print("In Translation Section")
+            print("Source Language: \(sourceLanguage)", "Target Language: \(targetLanguage)", "Recognized Text: \(recognizedText)")
         }
     }
+    
 
     private func getLocaleLanguage(from languageCode: String) -> Locale.Language? {
         return !languageCode.isEmpty && languageCode != "detect"
