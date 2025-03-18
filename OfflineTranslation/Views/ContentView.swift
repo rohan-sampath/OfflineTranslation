@@ -18,7 +18,6 @@ struct ContentView: View {
     @State private var recognizedText: String = ""
     @State private var detectedLanguage: String = "Unknown"
     @State private var isImageSelected: Bool = false
-    @State private var showTranslationSheet = false
     @State private var isPickerPresented = false
     @State private var isSettingsPresented = false
     
@@ -29,8 +28,6 @@ struct ContentView: View {
     
     @AppStorage("translationUIStyle") private var translationUIStyle = TranslationUIStyle.modalSheet
     
-    @State private var shouldShowTranslationView: Bool = false
-
     var body: some View {
         NavigationView {
             ScrollView {
@@ -51,29 +48,14 @@ struct ContentView: View {
                         .padding(.vertical)
                     }
                     
-                    if let _ = selectedImage {
-                        RecognizedTextView(
-                            detectedLanguage: detectedLanguage,
-                            recognizedText: recognizedText,
-                            translationUIStyle: translationUIStyle,
-                            translateAction: {
-                                if !sourceLanguage.isEmpty && !targetLanguage.isEmpty && !recognizedText.isEmpty && translationUIStyle == .inlineDisplay {
-                                    shouldShowTranslationView = true
-                                    print("TOUJOURS SOUMIS")
-                                } 
-                                else if translationUIStyle == .modalSheet {
-                                        showTranslationSheet = true
-                                }
-                            }
+                    if selectedImage != nil {
+                        TranslationSection(
+                            detectedLanguage: detectedLanguage, 
+                            recognizedText: recognizedText, 
+                            translationUIStyle: translationUIStyle, 
+                            sourceLanguage: sourceLanguage, 
+                            targetLanguage: targetLanguage
                         )
-                        
-                        if shouldShowTranslationView {
-                            TranslationView(
-                                sourceText: recognizedText,
-                                sourceLanguage: getLocaleLanguage(from: sourceLanguage),
-                                targetLanguage: getLocaleLanguage(from: targetLanguage)
-                            )
-                        }
                     }
                 }
                 .padding(.vertical)
@@ -91,39 +73,21 @@ struct ContentView: View {
                         detectedLanguage = "No Text Detected"
                     } else {
                         detectedLanguage = language
+                        print("The new detected language is \(detectedLanguage)")
                     }
-                    print("The new detected language is \(detectedLanguage)")
                 }
             }
             .sheet(isPresented: $isSettingsPresented) {
                 SettingsView()
             }
-            .if(translationUIStyle == .modalSheet) { view in
-                view.translationPresentation(isPresented: $showTranslationSheet, text: recognizedText)
-            }
             .withSupportedLanguages(
                 availableLanguages: $availableLanguages,
                 isLoading: $isLoadingLanguages
             )
-            .onChange(of: sourceLanguage) { _, _ in
-                shouldShowTranslationView = !sourceLanguage.isEmpty && !targetLanguage.isEmpty
-            }
-            .onChange(of: targetLanguage) { _, _ in
-                shouldShowTranslationView = !sourceLanguage.isEmpty && !targetLanguage.isEmpty
-            }
-            .onChange(of: detectedLanguage) { _, newLanguage in
-                print("🔄 ContentView: onChange detected language change to '\(newLanguage)'")
-                shouldShowTranslationView = !sourceLanguage.isEmpty && !targetLanguage.isEmpty
-            }
         }
     }
     
     // Helper function to convert string language code to Locale.Language
-    private func getLocaleLanguage(from languageCode: String) -> Locale.Language? {
-        return !languageCode.isEmpty && languageCode != "detect"
-            ? Locale.Language(identifier: languageCode.lowercased())
-            : nil
-    }
 }
 
 #Preview {

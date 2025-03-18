@@ -6,15 +6,17 @@
 //
 
 import SwiftUI
+import Translation
 
 struct TranslationSection: View {
     let detectedLanguage: String
     let recognizedText: String
     let translationUIStyle: TranslationUIStyle
-    @Binding var shouldShowTranslationView: Bool
-    @Binding var showTranslationSheet: Bool
     let sourceLanguage: String
     let targetLanguage: String
+    
+    @State private var shouldShowTranslationView = false
+    @State private var showTranslationSheet = false
 
     var body: some View {
         VStack {
@@ -25,6 +27,7 @@ struct TranslationSection: View {
                 translateAction: {
                     if !sourceLanguage.isEmpty && !targetLanguage.isEmpty && !recognizedText.isEmpty && translationUIStyle == .inlineDisplay {
                         shouldShowTranslationView = true
+                        print ("TOUJOURS SOUMIS")
                     } else if translationUIStyle == .modalSheet {
                         showTranslationSheet = true
                     }
@@ -39,5 +42,14 @@ struct TranslationSection: View {
                 )
             }
         }
+        .if(translationUIStyle == .modalSheet) { view in
+                view.translationPresentation(isPresented: $showTranslationSheet, text: recognizedText)
+        }
+    }
+
+    private func getLocaleLanguage(from languageCode: String) -> Locale.Language? {
+        return !languageCode.isEmpty && languageCode != "detect"
+            ? Locale.Language(identifier: languageCode.lowercased())
+            : nil
     }
 }
