@@ -1,26 +1,39 @@
 import SwiftUI
 import Translation
-import os
 
 struct TranslationView: View {
     let sourceText: String
-    let sourceLanguage: Locale.Language?
-    let targetLanguage: Locale.Language?
+    let sourceLanguage: Locale.Language
+    let targetLanguage: Locale.Language
 
     @State private var translatedText: String = ""
     @State private var translationError: Error?
     @State private var configuration: TranslationSession.Configuration?
     @State private var isTranslating: Bool = false
 
-    init(
+    init?(
         sourceText: String,
-        sourceLanguage: Locale.Language? = nil,
-        targetLanguage: Locale.Language? = nil
+        sourceLanguage: Locale.Language?,
+        targetLanguage: Locale.Language?
     ) {
+        var errorMessage: String = ""
+        if sourceText.isEmpty {
+            errorMessage += "Error: sourceText cannot be empty.\n"
+        }
+        if sourceLanguage == nil {
+            errorMessage += "Error: sourceLanguage must be provided and valid.\n"
+        }
+        if targetLanguage == nil {
+            errorMessage += "Error: targetLanguage must be provided and valid.\n"
+        }
+        if !errorMessage.isEmpty {
+            print("TranslationView Initialization Failed:\n" + errorMessage)
+            return nil
+        }
         self.sourceText = sourceText
-        self.sourceLanguage = sourceLanguage
-        self.targetLanguage = targetLanguage
-    }
+        self.sourceLanguage = sourceLanguage!
+        self.targetLanguage = targetLanguage!
+    }    
     
     var body: some View {
         VStack {
@@ -31,6 +44,8 @@ struct TranslationView: View {
                     
                     Text(translatedText)
                         .padding(.horizontal)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             else if isTranslating {
@@ -48,6 +63,7 @@ struct TranslationView: View {
                     .hidden() // This prevents UI clutter but keeps SwiftUI structure valid
             }
         }
+        .frame(maxWidth: .infinity)
         .translationTask(configuration) { session in
             do {
                 let response = try await session.translate(sourceText)

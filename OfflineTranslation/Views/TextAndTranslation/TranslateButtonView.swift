@@ -16,7 +16,7 @@ struct TranslateButtonView: View {
             ZStack {
                 Capsule()
                     .fill(isDisabled ? Color.gray : Color.blue)
-                    .frame(width: 100, height: 56)
+                    .frame(width: 80, height: 40)
                 
                 HStack(spacing: 4) {
                     Image(systemName: "globe")

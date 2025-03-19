@@ -15,6 +15,15 @@ class LanguageUtilities {
         return supportedLanguages.map { AvailableLanguage(locale: $0) }
             .sorted()
     }
+    
+    /// Converts a language code string to a Locale.Language
+    /// - Parameter languageCode: The language code string (e.g., en-US)
+    /// - Returns: A Locale.Language object or nil if the code is empty or "detect"
+    static func getLocaleLanguage(from languageCode: String) -> Locale.Language? {
+        return !languageCode.isEmpty && languageCode != "detect"
+            ? Locale.Language(identifier: languageCode.lowercased())
+            : nil
+    }
 }
 
 /// A view modifier that loads supported languages and provides them to the view

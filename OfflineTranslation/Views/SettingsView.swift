@@ -5,7 +5,7 @@ import Translation
 struct SettingsView: View {
     @AppStorage("selectedOCRModel") private var selectedModel = OCRModel.appleVision
     @AppStorage("translationUIStyle") private var translationUIStyle = TranslationUIStyle.modalSheet
-    @AppStorage("defaultTargetLanguage") private var defaultTargetLanguage = "en_US"
+    @AppStorage("defaultTargetLanguage") private var defaultTargetLanguage: String = "en-US"
     
     @State private var availableLanguages: [AvailableLanguage] = []
     @State private var isLoadingLanguages = true

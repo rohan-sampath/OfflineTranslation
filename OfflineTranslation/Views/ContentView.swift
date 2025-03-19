@@ -18,11 +18,12 @@ struct ContentView: View {
     @State private var recognizedText: String = ""
     @State private var detectedLanguage: String = "Unknown"
     @State private var isImageSelected: Bool = false
-    @State private var isPickerPresented = false
-    @State private var isSettingsPresented = false
+    @State private var isPickerPresented: Bool = false
+    @State private var isSettingsPresented: Bool = false
+    @State private var isSourceLanguageToBeDetected: Bool = true
     
-    @State private var sourceLanguage: String = "detect"
-    @State private var targetLanguage: String = ""
+    @State private var sourceLanguage: Locale.Language? 
+    @State private var targetLanguage: Locale.Language?
     @State private var availableLanguages: [AvailableLanguage] = []
     @State private var isLoadingLanguages: Bool = true
     
@@ -39,6 +40,7 @@ struct ContentView: View {
                             .padding()
                     } else {
                         LanguagePairView(
+                            isSourceLanguageToBeDetected: $isSourceLanguageToBeDetected,
                             sourceLanguage: $sourceLanguage,
                             targetLanguage: $targetLanguage,
                             detectedLanguage: detectedLanguage,
@@ -86,10 +88,4 @@ struct ContentView: View {
             )
         }
     }
-    
-    // Helper function to convert string language code to Locale.Language
-}
-
-#Preview {
-    ContentView()
-}
+    }

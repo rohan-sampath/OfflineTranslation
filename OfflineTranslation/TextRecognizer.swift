@@ -225,6 +225,7 @@ class TextRecognizer {
         
         // Display languages with probability > 0.05
         for (language, probability) in sortedHypotheses where probability > 0.05 {
+            print ("Raw Language: \(language)")
             let languageName = Locale.current.localizedString(forIdentifier: language.rawValue) ?? language.rawValue
             print("   - \(languageName): \(String(format: "%.2f", probability * 100))%")
             displayedProbability += probability
