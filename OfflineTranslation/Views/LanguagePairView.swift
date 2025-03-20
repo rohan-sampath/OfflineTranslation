@@ -48,7 +48,7 @@ struct LanguagePairView: View {
             } label: {
                 HStack {
                     if isSourceLanguageToBeDetected {
-                        if isImageSelected && detectedLanguage != "Unknown" && detectedLanguage != "No Text Detected" {
+                        if isImageSelected && detectedLanguage != "Unknown" {
                             // Show detected language
                             let detectedAvailableLanguage = availableLanguages
                                 .first(where: { languageShortNameMatches($0.shortName(), detectedLanguage) })
@@ -136,7 +136,7 @@ struct LanguagePairView: View {
             print("🔤 LanguagePairView: Detected language changed to: \(detectedLanguage)")
             
             // Use findMatchingLanguage when source language is set to be detected
-            if isSourceLanguageToBeDetected && detectedLanguage != "Unknown" && detectedLanguage != "No Text Detected" {
+            if isSourceLanguageToBeDetected && detectedLanguage != "Unknown" {
                 // Find the matching language code using our function
                 let matchedLanguage = AvailableLanguage.findMatchingLanguage(
                     availableLanguages: availableLanguages,

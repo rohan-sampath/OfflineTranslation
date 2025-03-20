@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Translation
+import Foundation
 
 struct TranslationSection: View {
     let detectedLanguage: String
@@ -14,6 +15,7 @@ struct TranslationSection: View {
     let translationUIStyle: TranslationUIStyle
     let sourceLanguage: Locale.Language?
     let targetLanguage: Locale.Language?
+    let isSourceLanguageToBeDetected: Bool
     
     @State private var shouldShowTranslationView = false
     @State private var showTranslationSheet = false
@@ -24,7 +26,12 @@ struct TranslationSection: View {
     var body: some View {
         VStack(alignment: .leading) {
             // Detected Language - Moved from RecognizedTextView
-            DetectedLanguageView(detectedLanguage: detectedLanguage)
+            DetectedLanguageView(
+                isTextDetected: !recognizedText.isEmpty,
+                detectedLanguage: detectedLanguage,
+                sourceLanguage: Locale.current.localizedString(forLanguageCode: sourceLanguage?.languageCode?.identifier ?? "") ?? "",
+                isSourceLanguageToBeDetected: isSourceLanguageToBeDetected
+            )
                 .padding(.horizontal)
             
             GeometryReader { geometry in

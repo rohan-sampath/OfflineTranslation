@@ -56,7 +56,8 @@ struct ContentView: View {
                             recognizedText: recognizedText, 
                             translationUIStyle: translationUIStyle, 
                             sourceLanguage: sourceLanguage, 
-                            targetLanguage: targetLanguage
+                            targetLanguage: targetLanguage, 
+                            isSourceLanguageToBeDetected: isSourceLanguageToBeDetected
                         )
                     }
                 }
@@ -72,7 +73,6 @@ struct ContentView: View {
                     print("📲 ContentView: PhotoPicker callback received - text length: \(text.count), language: '\(language)'")
                     if text.isEmpty {
                         print("IS EMPTY")
-                        detectedLanguage = "No Text Detected"
                     } else {
                         detectedLanguage = language
                         print("The new detected language is \(detectedLanguage)")
