@@ -92,7 +92,7 @@ extension AvailableLanguage {
         // Case B: Multiple matches - use defaults
         else if matchingLanguages.count > 1 {
             if let defaultCode = DefaultLanguage.getDefault(for: inputLanguage) {
-                return LanguageUtilities.getLocaleLanguage(from: defaultCode)
+                return Locale.Language(identifier: defaultCode)
             } else {
                 // If we have multiple matches but no default, return the first one
                 return matchingLanguages[0].locale

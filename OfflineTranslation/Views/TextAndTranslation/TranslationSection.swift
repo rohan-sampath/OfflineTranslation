@@ -43,11 +43,14 @@ struct TranslationSection: View {
                         TranslateButtonView(
                             isDisabled: isTranslationButtonDisabled,
                             action: {
-                                print ("Translation Button Pressed. Source Language: \(sourceLanguage?.shortName())")
                                 if (!recognizedText.isEmpty) {
-                                    if let sourceLanguage = sourceLanguage, let targetLanguage = targetLanguage, translationUIStyle == .inlineDisplay {
+                                    if translationUIStyle == .inlineDisplay,
+                                       let sourceLang = sourceLanguage, 
+                                       let targetLang = targetLanguage 
+                                       {
                                         shouldShowTranslationView = true
-                                        print("TOUJOURS SOUMIS")
+                                        print("Translation initiated with source language: \(sourceLang.languageCode ?? "Not Set")")
+                                        print("Target language: \(targetLang.languageCode ?? "Not Set")")
                                     } else if translationUIStyle == .modalSheet {
                                         showTranslationSheet = true
                                     }
@@ -82,13 +85,14 @@ struct TranslationSection: View {
                     .frame(width: textSectionWidth) // Match left side
                 }
             }
+
         }
         .if(translationUIStyle == .modalSheet) { view in
             view.translationPresentation(isPresented: $showTranslationSheet, text: recognizedText)
         }
         .onAppear {
             print("In Translation Section")
-            print("Source Language: \(sourceLanguage)", "Target Language: \(targetLanguage)", "Recognized Text: \(recognizedText)")
+            print("Recognized Text: \(recognizedText)")
         }
         .onChange(of: sourceLanguage) {
             shouldShowTranslationView = false

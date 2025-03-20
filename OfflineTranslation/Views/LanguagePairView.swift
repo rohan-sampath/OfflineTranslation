@@ -31,14 +31,16 @@ struct LanguagePairView: View {
                 
                 ForEach(availableLanguages, id: \.id) { language in
                     Button {
-                        sourceLanguage = language
+                        sourceLanguage = language.locale
                         isSourceLanguageToBeDetected = false
                         print("LanguagePairView: 🔤 Source language changed to: \(language.localizedName()) (\(language.shortName()))")
                     } label: {
                         HStack {
                             Text(language.localizedName())
-                            if sourceLanguage?.shortName() == language.shortName() && !isSourceLanguageToBeDetected {
-                                Image(systemName: "checkmark")
+                            if let source = sourceLanguage {
+                                if compareLanguages(source, language.locale) && !isSourceLanguageToBeDetected {
+                                    Image(systemName: "checkmark")
+                                }
                             }
                         }
                     }
@@ -48,9 +50,10 @@ struct LanguagePairView: View {
                     if isSourceLanguageToBeDetected {
                         if isImageSelected && detectedLanguage != "Unknown" && detectedLanguage != "No Text Detected" {
                             // Show detected language
-                            let detectedLocalizedName = availableLanguages
-                                .first(where: { $0.shortName() == detectedLanguage })?
-                                .localizedName() ?? detectedLanguage
+                            let detectedAvailableLanguage = availableLanguages
+                                .first(where: { languageShortNameMatches($0.shortName(), detectedLanguage) })
+                            
+                            let detectedLocalizedName = detectedAvailableLanguage?.localizedName() ?? detectedLanguage
                             
                             Text("Detected - \(detectedLocalizedName)")
                                 .lineLimit(2)
@@ -59,12 +62,18 @@ struct LanguagePairView: View {
                         }
                     } else {
                         // Show selected language
-                        let selectedLocalizedName = availableLanguages
-                            .first(where: { $0.shortName() == sourceLanguage })?
-                            .localizedName() ?? sourceLanguage
-                        
-                        Text(selectedLocalizedName)
-                            .lineLimit(2)
+                        if let source = sourceLanguage {
+                            let selectedAvailableLanguage = availableLanguages
+                                .first(where: { compareLanguages(source, $0.locale) })
+                            
+                            let selectedLocalizedName = selectedAvailableLanguage?.localizedName() ?? "Unknown"
+                            
+                            Text(selectedLocalizedName)
+                                .lineLimit(2)
+                        } else {
+                            Text("Select Language")
+                                .lineLimit(2)
+                        }
                     }
                     
                     Image(systemName: "chevron.down")
@@ -83,15 +92,15 @@ struct LanguagePairView: View {
             // Target language picker
             Menu {
                 ForEach(availableLanguages, id: \.id) { language in
-                    let isDisabled = sourceLanguage?.languageNameOnly() == language.languageNameOnly()
+                    let isDisabled = sourceLanguage?.languageCode == language.locale.languageCode
                     
                     Button {
-                        targetLanguage = language
+                        targetLanguage = language.locale
                         print("LanguagePairView: 🎯 Target language changed to: \(language.localizedName()) (\(language.shortName()))")
                     } label: {
                         HStack {
                             Text(language.localizedName())
-                            if targetLanguage?.shortName() == language.shortName() {
+                            if let target = targetLanguage, compareLanguages(target, language.locale) {
                                 Image(systemName: "checkmark")
                             }
                         }
@@ -100,12 +109,18 @@ struct LanguagePairView: View {
                 }
             } label: {
                 HStack {
-                    let selectedLocalizedName = availableLanguages
-                        .first(where: { $0.shortName() == targetLanguage })?
-                        .localizedName() ?? targetLanguage
-                    
-                    Text(selectedLocalizedName)
-                        .lineLimit(2)
+                    if let target = targetLanguage {
+                        let selectedAvailableLanguage = availableLanguages
+                            .first(where: { compareLanguages(target, $0.locale) })
+                        
+                        let selectedLocalizedName = selectedAvailableLanguage?.localizedName() ?? "Unknown"
+                        
+                        Text(selectedLocalizedName)
+                            .lineLimit(2)
+                    } else {
+                        Text("Select Language")
+                            .lineLimit(2)
+                    }
                     
                     Image(systemName: "chevron.down")
                         .font(.caption)
@@ -127,11 +142,11 @@ struct LanguagePairView: View {
                     availableLanguages: availableLanguages,
                     inputLanguage: detectedLanguage
                 )
-                print ("Matched Language: \(matchedLanguage)")
+                print("Matched Language: \(matchedLanguage?.languageCode ?? "nil")")
                 // Update the source language if we found a match
                 if matchedLanguage != nil {
                     sourceLanguage = matchedLanguage
-                    print("🔤 LanguagePairView: Matched detected language \(detectedLanguage) to: \(matchedLanguage)")
+                    print("🔤 LanguagePairView: Matched detected language \(detectedLanguage) to: \(matchedLanguage?.languageCode ?? "nil")")
                 }
                 else {
                     sourceLanguage = nil
@@ -140,18 +155,28 @@ struct LanguagePairView: View {
             }
         }
         .onChange(of: sourceLanguage) {
-            print("🔤 LanguagePairView: Source language changed to: \(sourceLanguage)")
+            print("🔤 LanguagePairView: Source language changed to: \(sourceLanguage?.languageCode ?? "nil")")
         }
         .onChange(of: targetLanguage) {
-            print("🎯 LanguagePairView: Target language changed to: \(targetLanguage)")
+            print("🎯 LanguagePairView: Target language changed to: \(targetLanguage?.languageCode ?? "nil")")
         }
         .onAppear {
             // Set default target language if not already set
-            if targetLanguage.isEmpty {
-                targetLanguage = LanguageUtilities.getLocaleLanguage(from: defaultTargetLanguage)
+            if targetLanguage == nil {
+                targetLanguage = Locale.Language(identifier: defaultTargetLanguage)
                 print("🎯 LanguagePairView: Target language set to default: \(defaultTargetLanguage)")
             }
-           
         }
+    }
+    
+    // Helper function to properly compare two Locale.Language objects
+    private func compareLanguages(_ language1: Locale.Language, _ language2: Locale.Language) -> Bool {
+        return language1.languageCode == language2.languageCode && 
+               language1.region == language2.region
+    }
+    
+    // Helper function to compare a language shortName with a string code
+    private func languageShortNameMatches(_ shortName: String, _ code: String) -> Bool {
+        return shortName == code
     }
 }
