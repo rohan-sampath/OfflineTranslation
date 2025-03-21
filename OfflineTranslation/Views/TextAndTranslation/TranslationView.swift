@@ -1,6 +1,13 @@
 import SwiftUI
 import Translation
 
+struct TranslationHeaderView: View {
+    var body: some View {
+        Text("**Translation**")
+            .font(.headline)
+    }
+}
+
 struct TranslationView: View {
     let sourceText: String
     let sourceLanguage: Locale.Language
@@ -35,36 +42,44 @@ struct TranslationView: View {
         self.targetLanguage = targetLanguage!
     }    
     
-    var body: some View {
-        VStack {
+var body: some View {
+    ScrollView { // Makes the entire view scrollable
+        VStack(alignment: .leading, spacing: 12) { // Leading alignment for all elements
             if !translatedText.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("**Translation:**")
-                        .font(.headline)
-                    
                     Text(translatedText)
                         .padding(.horizontal)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true) // Ensures text wraps properly
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             else if isTranslating {
-                HStack {
+                VStack(alignment: .leading, spacing: 8) { // Change to VStack for text wrapping
                     Text("Translating...")
+                        .fixedSize(horizontal: false, vertical: true) // Ensures wrapping
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     ProgressView()
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             else if translationError != nil {
-                Text("Translation error: \(String(describing: translationError))")
-                    .foregroundColor(.red)
+                VStack(alignment: .leading, spacing: 8) { // Change to VStack for text wrapping
+                    Text("Translation error: \(String(describing: translationError))")
+                        .foregroundColor(.red)
+                        .fixedSize(horizontal: false, vertical: true) // Ensures wrapping
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             else {
                 Text("No translation yet.") // Dummy View to satisfy SwiftUI
-                    .hidden() // This prevents UI clutter but keeps SwiftUI structure valid
+                    .hidden() // Prevents UI clutter but keeps SwiftUI structure valid
             }
         }
-        .frame(maxWidth: .infinity)
-        .translationTask(configuration) { session in
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding() // Adds padding to prevent text from touching the screen edges
+    }        
+    .translationTask(configuration) { session in
             do {
                 let response = try await session.translate(sourceText)
                 isTranslating = false

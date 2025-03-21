@@ -1,5 +1,12 @@
 import SwiftUI
 
+struct RecognizedTextHeaderView: View {
+    var body: some View {
+        Text("**Original Text**")
+            .font(.headline)
+    }
+}
+
 struct RecognizedTextView: View {
     let recognizedText: String
     
@@ -10,24 +17,11 @@ struct RecognizedTextView: View {
             // Recognized Text
             if !recognizedText.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("**Original Text:**    ")
-                        .font(.headline)
-                    
                     Text(recognizedText)
                         .lineLimit(showFullText ? nil : 8)
                         .fixedSize(horizontal: false, vertical: true) // Allow multiline
                         .padding(.horizontal)
                     
-                    if recognizedText.count > 100 { // Show the button only for longer text
-                        Button(showFullText ? "Show Less" : "Show More") {
-                            withAnimation {
-                                showFullText.toggle()
-                            }
-                        }
-                        .padding(.horizontal)
-                        .foregroundColor(.blue)
-                        .transition(.opacity)
-                    }
                 }
             }
         }

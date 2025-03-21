@@ -39,7 +39,7 @@ struct DetectedLanguageView: View {
                         // Print nothing when detected language equals source language
                     } else {
                         // Detected language is not equal to source language
-                        Text("Detected Language: <\(detectedLanguage)>. Translating from <\(sourceLanguage)> anyway.")
+                        Text("Detected Language: **\(detectedLanguage)**. Translating from **\(sourceLanguage)** anyway...")
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
