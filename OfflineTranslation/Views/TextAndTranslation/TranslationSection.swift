@@ -16,56 +16,46 @@ struct TranslationSection: View {
     let sourceLanguage: Locale.Language?
     let targetLanguage: Locale.Language?
     let isSourceLanguageToBeDetected: Bool
-    
+
     @State private var shouldShowTranslationView = false
     @State private var showTranslationSheet = false
     @State private var isTranslationButtonDisabled = false
     @State private var errorMessage = ""
 
-    private let dividerWidth: CGFloat = 50 // Space for button & divider
+    private let dividerWidth: CGFloat = 50
 
     var body: some View {
-        VStack(alignment: .leading) {
-            // Detected Language - Moved from RecognizedTextView
-            DetectedLanguageView(
-                isTextDetected: !recognizedText.isEmpty,
-                detectedLanguage: detectedLanguage,
-                sourceLanguage: Locale.current.localizedString(forLanguageCode: sourceLanguage?.languageCode?.identifier ?? "") ?? "",
-                isSourceLanguageToBeDetected: isSourceLanguageToBeDetected
-            )
-            .padding(.horizontal)
-            
-            GeometryReader { geometry in
-                let textSectionWidth = (geometry.size.width - dividerWidth) / 2
-                
-                // Main content with ScrollView
-                ScrollView {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                DetectedLanguageView(
+                    isTextDetected: !recognizedText.isEmpty,
+                    detectedLanguage: detectedLanguage,
+                    sourceLanguage: Locale.current.localizedString(forLanguageCode: sourceLanguage?.languageCode?.identifier ?? "") ?? "",
+                    isSourceLanguageToBeDetected: isSourceLanguageToBeDetected
+                )
+                .padding(.horizontal)
+
+                GeometryReader { geometry in
+                    let textSectionWidth = (geometry.size.width - dividerWidth) / 2
+
                     HStack(spacing: 0) {
-                        // Left side - Original Text
                         VStack(alignment: .leading) {
                             RecognizedTextView(recognizedText: recognizedText)
+                                .padding(.trailing, 4)
                         }
-                        .frame(width: textSectionWidth)
+                        .frame(width: textSectionWidth, alignment: .topLeading)
 
-                        // Center - Vertical Divider and Translate Button
                         VStack(spacing: 0) {
-                            // Translate Button at the top
                             if !recognizedText.isEmpty {
                                 TranslateButtonView(
                                     isDisabled: isTranslationButtonDisabled,
                                     action: {
-                                        if (!recognizedText.isEmpty) {
-                                            if translationUIStyle == .inlineDisplay,
-                                               let sourceLang = sourceLanguage, 
-                                               let targetLang = targetLanguage 
-                                               {
-                                                shouldShowTranslationView = true
-                                                print("✅ [TranslationSection] shouldShowTranslationView set to TRUE - Translation initiated")
-                                                print("Translation initiated with source language: \(sourceLang.languageCode ?? "Not Set")")
-                                                print("Target language: \(targetLang.languageCode ?? "Not Set")")
-                                            } else if translationUIStyle == .modalSheet {
-                                                showTranslationSheet = true
-                                            }
+                                        if translationUIStyle == .inlineDisplay,
+                                           let sourceLang = sourceLanguage,
+                                           let targetLang = targetLanguage {
+                                            shouldShowTranslationView = true
+                                        } else if translationUIStyle == .modalSheet {
+                                            showTranslationSheet = true
                                         }
                                     },
                                     errorMessage: errorMessage
@@ -74,7 +64,6 @@ struct TranslationSection: View {
                                 .frame(maxWidth: .infinity, alignment: .center)
                             }
 
-                            // Full-height divider
                             Rectangle()
                                 .fill(Color.gray.opacity(0.3))
                                 .frame(width: 1)
@@ -82,8 +71,7 @@ struct TranslationSection: View {
                         }
                         .frame(width: dividerWidth)
 
-                        // Right side - Translation
-                        VStack {
+                        VStack(alignment: .leading) {
                             if shouldShowTranslationView {
                                 TranslationView(
                                     sourceText: recognizedText,
@@ -95,39 +83,35 @@ struct TranslationSection: View {
                                 Spacer()
                             }
                         }
-                        .frame(width: textSectionWidth)
+                        .frame(width: textSectionWidth, alignment: .topLeading)
                     }
-                    .frame(maxHeight: .infinity, alignment: .top)
+                    .frame(height: geometry.size.height)
                 }
+                .frame(minHeight: 400) // ✅ Prevent collapse
             }
+            .padding(.bottom)
         }
         .if(translationUIStyle == .modalSheet) { view in
             view.translationPresentation(isPresented: $showTranslationSheet, text: recognizedText)
         }
         .onAppear {
-            print("In Translation Section")
-            print("Recognized Text: \(recognizedText)")
             checkLanguages()
         }
-        .onChange(of: sourceLanguage) {
+        .onChange(of: sourceLanguage) { _ in
             shouldShowTranslationView = false
-            print("🔄 [TranslationSection] shouldShowTranslationView set to FALSE - sourceLanguage changed")
             checkLanguages()
         }
-        .onChange(of: targetLanguage) {
+        .onChange(of: targetLanguage) { _ in
             shouldShowTranslationView = false
-            print("🔄 [TranslationSection] shouldShowTranslationView set to FALSE - targetLanguage changed")
             checkLanguages()
         }
-        .onChange(of: recognizedText) {
+        .onChange(of: recognizedText) { _ in
             shouldShowTranslationView = false
-            print("🔄 [TranslationSection] shouldShowTranslationView set to FALSE - recognizedText changed")
         }
     }
-    
+
     private func checkLanguages() {
-        // Check if source and target languages are the same and both are set
-        if let source = sourceLanguage, 
+        if let source = sourceLanguage,
            let target = targetLanguage,
            source.languageCode == target.languageCode {
             isTranslationButtonDisabled = true
