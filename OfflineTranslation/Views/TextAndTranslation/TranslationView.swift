@@ -8,6 +8,15 @@ struct TranslationHeaderView: View {
     }
 }
 
+// Preference key to get translated text from TranslationView
+struct TranslatedTextPreferenceKey: PreferenceKey {
+    static var defaultValue: String = ""
+    
+    static func reduce(value: inout String, nextValue: () -> String) {
+        value = nextValue()
+    }
+}
+
 struct TranslationView: View {
     let sourceText: String
     let sourceLanguage: Locale.Language
@@ -45,7 +54,7 @@ struct TranslationView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if !translatedText.isEmpty {
-                Text(translatedText)
+                Text(removeBlankLines(from: translatedText))
                     .font(.body)
                     .padding(.horizontal, 16) // 16 points of horizontal padding
                     .fixedSize(horizontal: false, vertical: true) // Ensures text wraps properly
@@ -71,6 +80,7 @@ struct TranslationView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading) // Match RecognizedTextView
+        .preference(key: TranslatedTextPreferenceKey.self, value: removeBlankLines(from: translatedText)) // Expose translated text
         .translationTask(configuration) { session in
             do {
                 let response = try await session.translate(sourceText)
@@ -96,5 +106,12 @@ struct TranslationView: View {
             source: sourceLanguage,
             target: targetLanguage
         )
+    }
+    
+    // Helper function to remove blank lines from text
+    private func removeBlankLines(from text: String) -> String {
+        let lines = text.components(separatedBy: .newlines)
+        let nonEmptyLines = lines.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        return nonEmptyLines.joined(separator: "\n")
     }
 }

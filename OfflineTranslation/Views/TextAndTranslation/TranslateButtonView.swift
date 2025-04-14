@@ -17,12 +17,15 @@ struct TranslateButtonView: View {
             ZStack {
                 Capsule()
                     .fill(isDisabled ? Color.gray : Color.blue)
-                    .frame(width: 80, height: 40)
+                    .frame(width: 160, height: 44)
                 
-                HStack(spacing: 4) {
+                HStack(spacing: 8) {
                     Image(systemName: "globe")
                         .resizable()
-                        .frame(width: 20, height: 20)
+                        .frame(width: 18, height: 18)
+                    
+                    Text("Translate")
+                        .font(.system(size: 16, weight: .medium))
                     
                     Image(systemName: "arrow.right")
                         .resizable()
