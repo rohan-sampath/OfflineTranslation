@@ -89,18 +89,8 @@ struct TranslationSection: View {
                                 targetLanguage: targetLanguage
                             )
                             .padding()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                            .onAppear {
-                                print("🔍 [TranslationSection] TranslationView APPEARED in the view hierarchy")
-                            }
-                            .onDisappear {
-                                print("⚠️ [TranslationSection] TranslationView DISAPPEARED from the view hierarchy")
-                            }
                         } else {
                             Spacer()
-                                .onAppear {
-                                    print("⚠️ [TranslationSection] TranslationView is NOT showing (shouldShowTranslationView = \(shouldShowTranslationView))")
-                                }
                         }
                     }
                     .frame(width: textSectionWidth) // Match left side
