@@ -10,7 +10,8 @@ struct PhotoPicker: UIViewControllerRepresentable {
     @Binding var selectedImage: UIImage?
     @Binding var recognizedText: String
     @Binding var detectedLanguage: String
-    var onTextRecognized: ((String, String) -> Void)? = nil
+    @Binding var possibleLanguages: [String]
+    var onTextRecognized: ((String, String, [String]) -> Void)? = nil
 
     func makeUIViewController(context: Context) -> PHPickerViewController {
         var config = PHPickerConfiguration()
@@ -48,16 +49,18 @@ struct PhotoPicker: UIViewControllerRepresentable {
                             print("📸 PhotoPicker: Image selected, about to call TextRecognizer")
                             
                             // Perform text recognition and language detection
-                            TextRecognizer().recognizeText(in: uiImage) { recognizedText, detectedLanguage in
+                            TextRecognizer().recognizeText(in: uiImage) { recognizedText, languageResult in
                                 print("📝 TextRecognizer: Text recognition completed")
                                 print("📝 Recognized text: \(recognizedText.prefix(50))")
-                                print("🌐 Detected language: \(detectedLanguage)")
+                                print("🌐 Detected language: \(languageResult.dominantLanguage)")
+                                print("🌐 Possible languages: \(languageResult.possibleLanguages.joined(separator: ", "))")
                                 
                                 self.parent.recognizedText = recognizedText
-                                self.parent.detectedLanguage = detectedLanguage
+                                self.parent.detectedLanguage = languageResult.dominantLanguage
+                                self.parent.possibleLanguages = languageResult.possibleLanguages
                                 
                                 // Call the callback if provided
-                                self.parent.onTextRecognized?(recognizedText, detectedLanguage)
+                                self.parent.onTextRecognized?(recognizedText, languageResult.dominantLanguage, languageResult.possibleLanguages)
                             }
                         } else {
                             print("❌ PhotoPicker: Failed to get UIImage from selected photo")

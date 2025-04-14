@@ -16,7 +16,7 @@ struct TranslateButtonView: View {
         }) {
             ZStack {
                 Capsule()
-                    .fill(isDisabled ? Color.gray : Color.blue)
+                    .fill(isDisabled ? Color(UIColor.systemGray5) : Color.blue)
                     .frame(width: 160, height: 44)
                 
                 HStack(spacing: 8) {
@@ -31,7 +31,7 @@ struct TranslateButtonView: View {
                         .resizable()
                         .frame(width: 12, height: 12)
                 }
-                .foregroundColor(.white)
+                .foregroundColor(isDisabled ? Color.gray : Color.white)
             }
         }
         .alert(isPresented: $showAlert) {

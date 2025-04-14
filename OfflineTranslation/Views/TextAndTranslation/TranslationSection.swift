@@ -4,11 +4,14 @@ import Foundation
 
 struct TranslationSection: View {
     let detectedLanguage: String
+    let possibleLanguages: [String]
     let recognizedText: String
     let translationUIStyle: TranslationUIStyle
     let sourceLanguage: Locale.Language?
     let targetLanguage: Locale.Language?
     let isSourceLanguageToBeDetected: Bool
+    let isDetectedLanguageSupported: Bool
+    let unsupportedLanguageError: String
     
     @State private var shouldShowTranslationView = false
     @State private var showTranslationSheet = false
@@ -25,11 +28,12 @@ struct TranslationSection: View {
                 DetectedLanguageView(
                     isTextDetected: !recognizedText.isEmpty,
                     detectedLanguage: detectedLanguage,
+                    possibleLanguages: possibleLanguages,
                     sourceLanguage: Locale.current.localizedString(forLanguageCode: sourceLanguage?.languageCode?.identifier ?? "") ?? "",
                     isSourceLanguageToBeDetected: isSourceLanguageToBeDetected
                 )
                 .padding(.horizontal)
-                .padding(.top, 8)
+                .padding(.top, 2)
                 
                 // Original Text Section - Only show if there's text
                 if !recognizedText.isEmpty {
@@ -143,6 +147,12 @@ struct TranslationSection: View {
             shouldShowTranslationView = false
             checkLanguages()
         }
+        .onChange(of: isDetectedLanguageSupported) {
+            checkLanguages()
+        }
+        .onChange(of: unsupportedLanguageError) {
+            checkLanguages()
+        }
         .onChange(of: recognizedText) {
             shouldShowTranslationView = false
             showFullOriginalText = false
@@ -154,15 +164,32 @@ struct TranslationSection: View {
     }
     
     private func checkLanguages() {
+        // First check if detected language is supported when in detect mode
+        if isSourceLanguageToBeDetected && !isDetectedLanguageSupported && !unsupportedLanguageError.isEmpty {
+            isTranslationButtonDisabled = true
+            errorMessage = unsupportedLanguageError
+            return
+        }
+        
+        // Then check if source and target languages are the same
         if let source = sourceLanguage, 
            let target = targetLanguage,
            source.languageCode == target.languageCode {
             isTranslationButtonDisabled = true
             errorMessage = "Translation requires different source and target languages."
-        } else {
-            isTranslationButtonDisabled = false
-            errorMessage = ""
+            return
         }
+        
+        // If source language is nil and we're in detect mode, disable translation
+        if sourceLanguage == nil && isSourceLanguageToBeDetected {
+            isTranslationButtonDisabled = true
+            errorMessage = "Cannot translate: no source language detected."
+            return
+        }
+        
+        // If we get here, translation should be enabled
+        isTranslationButtonDisabled = false
+        errorMessage = ""
     }
     
     // Helper function to get language name

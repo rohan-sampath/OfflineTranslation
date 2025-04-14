@@ -17,6 +17,7 @@ struct ContentView: View {
     }
     @State private var recognizedText: String = ""
     @State private var detectedLanguage: String = "Unknown"
+    @State private var possibleLanguages: [String] = []
     @State private var isImageSelected: Bool = false
     @State private var isPickerPresented: Bool = false
     @State private var isSettingsPresented: Bool = false
@@ -26,6 +27,10 @@ struct ContentView: View {
     @State private var targetLanguage: Locale.Language?
     @State private var availableLanguages: [AvailableLanguage] = []
     @State private var isLoadingLanguages: Bool = true
+    
+    // State variables for language support
+    @State private var isDetectedLanguageSupported: Bool = true
+    @State private var unsupportedLanguageError: String = ""
     
     @AppStorage("translationUIStyle") private var translationUIStyle = TranslationUIStyle.modalSheet
     
@@ -43,6 +48,8 @@ struct ContentView: View {
                             isSourceLanguageToBeDetected: $isSourceLanguageToBeDetected,
                             sourceLanguage: $sourceLanguage,
                             targetLanguage: $targetLanguage,
+                            isDetectedLanguageSupported: $isDetectedLanguageSupported,
+                            unsupportedLanguageError: $unsupportedLanguageError,
                             detectedLanguage: detectedLanguage,
                             availableLanguages: availableLanguages,
                             isImageSelected: isImageSelected
@@ -53,11 +60,14 @@ struct ContentView: View {
                     if selectedImage != nil {
                         TranslationSection(
                             detectedLanguage: detectedLanguage, 
+                            possibleLanguages: possibleLanguages,
                             recognizedText: recognizedText, 
                             translationUIStyle: translationUIStyle, 
                             sourceLanguage: sourceLanguage, 
                             targetLanguage: targetLanguage, 
-                            isSourceLanguageToBeDetected: isSourceLanguageToBeDetected
+                            isSourceLanguageToBeDetected: isSourceLanguageToBeDetected,
+                            isDetectedLanguageSupported: isDetectedLanguageSupported,
+                            unsupportedLanguageError: unsupportedLanguageError
                         )
                     }
                 }
@@ -69,13 +79,20 @@ struct ContentView: View {
                 SettingsButtonView(isSettingsPresented: $isSettingsPresented)
             }
             .sheet(isPresented: $isPickerPresented) {
-                PhotoPicker(selectedImage: $selectedImage, recognizedText: $recognizedText, detectedLanguage: $detectedLanguage) { text, language in
+                PhotoPicker(
+                    selectedImage: $selectedImage, 
+                    recognizedText: $recognizedText, 
+                    detectedLanguage: $detectedLanguage,
+                    possibleLanguages: $possibleLanguages
+                ) { text, language, possibleLangs in
                     print("📲 ContentView: PhotoPicker callback received - text length: \(text.count), language: '\(language)'")
                     if text.isEmpty {
                         print("IS EMPTY")
                     } else {
                         detectedLanguage = language
+                        possibleLanguages = possibleLangs
                         print("The new detected language is \(detectedLanguage)")
+                        print("Possible languages: \(possibleLangs.joined(separator: ", "))")
                     }
                 }
             }
@@ -88,4 +105,4 @@ struct ContentView: View {
             )
         }
     }
-    }
+}

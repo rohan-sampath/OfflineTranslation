@@ -5,6 +5,8 @@ struct LanguagePairView: View {
     @Binding var isSourceLanguageToBeDetected: Bool
     @Binding var sourceLanguage: Locale.Language?
     @Binding var targetLanguage: Locale.Language?
+    @Binding var isDetectedLanguageSupported: Bool
+    @Binding var unsupportedLanguageError: String
     var detectedLanguage: String
     var availableLanguages: [AvailableLanguage]
     var isImageSelected: Bool
@@ -17,7 +19,27 @@ struct LanguagePairView: View {
             Menu {
                 Button {
                     isSourceLanguageToBeDetected = true
-                    print("🔤 LanguagePairView: isSourceLanguageToBeDetected set to true.")
+                    // Reset sourceLanguage when switching to "Detect Language" mode
+                    if detectedLanguage == "Unknown" || !isImageSelected {
+                        sourceLanguage = nil
+                        isDetectedLanguageSupported = true
+                        unsupportedLanguageError = ""
+                    } else {
+                        // Set sourceLanguage to the detected language
+                        let matchedLanguage = AvailableLanguage.findMatchingLanguage(
+                            availableLanguages: availableLanguages,
+                            inputLanguage: detectedLanguage
+                        )
+                        sourceLanguage = matchedLanguage
+                        // Check if the detected language is supported
+                        isDetectedLanguageSupported = matchedLanguage != nil
+                        if !isDetectedLanguageSupported {
+                            unsupportedLanguageError = "Detected language '\(detectedLanguage)' is not supported by Apple Translate"
+                        } else {
+                            unsupportedLanguageError = ""
+                        }
+                    }
+                    print(" LanguagePairView: isSourceLanguageToBeDetected set to true. sourceLanguage: \(sourceLanguage?.languageCode ?? "nil")")
                 } label: {
                     HStack {
                         Text("Detect Language")
@@ -33,7 +55,9 @@ struct LanguagePairView: View {
                     Button {
                         sourceLanguage = language.locale
                         isSourceLanguageToBeDetected = false
-                        print("LanguagePairView: 🔤 Source language changed to: \(language.localizedName()) (\(language.shortName()))")
+                        isDetectedLanguageSupported = true
+                        unsupportedLanguageError = ""
+                        print("LanguagePairView:  Source language changed to: \(language.localizedName()) (\(language.shortName()))")
                     } label: {
                         HStack {
                             Text(language.localizedName())
@@ -96,7 +120,7 @@ struct LanguagePairView: View {
                     
                     Button {
                         targetLanguage = language.locale
-                        print("LanguagePairView: 🎯 Target language changed to: \(language.localizedName()) (\(language.shortName()))")
+                        print("LanguagePairView:  Target language changed to: \(language.localizedName()) (\(language.shortName()))")
                     } label: {
                         HStack {
                             Text(language.localizedName())
@@ -133,7 +157,16 @@ struct LanguagePairView: View {
         }
         .padding(.horizontal)
           .onChange(of: detectedLanguage) {
-            print("🔤 LanguagePairView: Detected language changed to: \(detectedLanguage)")
+            print(" LanguagePairView: Detected language changed to: \(detectedLanguage)")
+            
+            // Reset sourceLanguage when detectedLanguage is "Unknown" and in detect mode
+            if detectedLanguage == "Unknown" && isSourceLanguageToBeDetected {
+                sourceLanguage = nil
+                isDetectedLanguageSupported = true
+                unsupportedLanguageError = ""
+                print(" LanguagePairView: Reset sourceLanguage to nil because detectedLanguage is Unknown")
+                return
+            }
             
             // Use findMatchingLanguage when source language is set to be detected
             if isSourceLanguageToBeDetected && detectedLanguage != "Unknown" {
@@ -143,28 +176,55 @@ struct LanguagePairView: View {
                     inputLanguage: detectedLanguage
                 )
                 print("Matched Language: \(matchedLanguage?.languageCode ?? "nil")")
+                
+                // Check if the detected language is supported
+                isDetectedLanguageSupported = matchedLanguage != nil
+                if !isDetectedLanguageSupported {
+                    unsupportedLanguageError = "Detected language '\(detectedLanguage)' is not supported by Apple Translate"
+                    print(" LanguagePairView: Detected language \(detectedLanguage) is not supported")
+                } else {
+                    unsupportedLanguageError = ""
+                }
+                
                 // Update the source language if we found a match
                 if matchedLanguage != nil {
                     sourceLanguage = matchedLanguage
-                    print("🔤 LanguagePairView: Matched detected language \(detectedLanguage) to: \(matchedLanguage?.languageCode ?? "nil")")
+                    print(" LanguagePairView: Matched detected language \(detectedLanguage) to: \(matchedLanguage?.languageCode ?? "nil")")
                 }
                 else {
                     sourceLanguage = nil
-                    print("🔤 LanguagePairView: Detected language \(detectedLanguage) not found in available languages.")
+                    print(" LanguagePairView: Detected language \(detectedLanguage) not found in available languages.")
                 }
             }
         }
         .onChange(of: sourceLanguage) {
-            print("🔤 LanguagePairView: Source language changed to: \(sourceLanguage?.languageCode ?? "nil")")
+            print(" LanguagePairView: Source language changed to: \(sourceLanguage?.languageCode ?? "nil")")
         }
         .onChange(of: targetLanguage) {
-            print("🎯 LanguagePairView: Target language changed to: \(targetLanguage?.languageCode ?? "nil")")
+            print(" LanguagePairView: Target language changed to: \(targetLanguage?.languageCode ?? "nil")")
+        }
+        .onChange(of: isImageSelected) { 
+            // Reset sourceLanguage when there's no image and in detect mode
+            if !isImageSelected && isSourceLanguageToBeDetected {
+                sourceLanguage = nil
+                isDetectedLanguageSupported = true
+                unsupportedLanguageError = ""
+                print(" LanguagePairView: Reset sourceLanguage to nil because no image is selected")
+            }
         }
         .onAppear {
             // Set default target language if not already set
             if targetLanguage == nil {
                 targetLanguage = Locale.Language(identifier: defaultTargetLanguage)
-                print("🎯 LanguagePairView: Target language set to default: \(defaultTargetLanguage)")
+                print(" LanguagePairView: Target language set to default: \(defaultTargetLanguage)")
+            }
+            
+            // Reset sourceLanguage if no image is selected and in detect mode
+            if !isImageSelected && isSourceLanguageToBeDetected {
+                sourceLanguage = nil
+                isDetectedLanguageSupported = true
+                unsupportedLanguageError = ""
+                print(" LanguagePairView: Reset sourceLanguage to nil on appear because no image is selected")
             }
         }
     }
