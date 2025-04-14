@@ -33,70 +33,73 @@ struct TranslationSection: View {
                 sourceLanguage: Locale.current.localizedString(forLanguageCode: sourceLanguage?.languageCode?.identifier ?? "") ?? "",
                 isSourceLanguageToBeDetected: isSourceLanguageToBeDetected
             )
-                .padding(.horizontal)
+            .padding(.horizontal)
             
             GeometryReader { geometry in
-                let textSectionWidth = (geometry.size.width - dividerWidth) / 2 // Adjusted width
+                let textSectionWidth = (geometry.size.width - dividerWidth) / 2
                 
-                HStack(spacing: 0) {
-                    // Left side - Original Text
-                    VStack(alignment: .leading) {
-                        RecognizedTextView(recognizedText: recognizedText)
-                    }
-                    .frame(width: textSectionWidth)
+                // Main content with ScrollView
+                ScrollView {
+                    HStack(spacing: 0) {
+                        // Left side - Original Text
+                        VStack(alignment: .leading) {
+                            RecognizedTextView(recognizedText: recognizedText)
+                        }
+                        .frame(width: textSectionWidth)
 
-                    // Center - Vertical Divider and Translate Button
-                    VStack {
-                        // Translate Button centered horizontally
-                        if !recognizedText.isEmpty {
-                            TranslateButtonView(
-                                isDisabled: isTranslationButtonDisabled,
-                                action: {
-                                    if (!recognizedText.isEmpty) {
-                                        if translationUIStyle == .inlineDisplay,
-                                           let sourceLang = sourceLanguage, 
-                                           let targetLang = targetLanguage 
-                                           {
-                                            shouldShowTranslationView = true
-                                            print("✅ [TranslationSection] shouldShowTranslationView set to TRUE - Translation initiated")
-                                            print("Translation initiated with source language: \(sourceLang.languageCode ?? "Not Set")")
-                                            print("Target language: \(targetLang.languageCode ?? "Not Set")")
-                                        } else if translationUIStyle == .modalSheet {
-                                            showTranslationSheet = true
+                        // Center - Vertical Divider and Translate Button
+                        VStack(spacing: 0) {
+                            // Translate Button at the top
+                            if !recognizedText.isEmpty {
+                                TranslateButtonView(
+                                    isDisabled: isTranslationButtonDisabled,
+                                    action: {
+                                        if (!recognizedText.isEmpty) {
+                                            if translationUIStyle == .inlineDisplay,
+                                               let sourceLang = sourceLanguage, 
+                                               let targetLang = targetLanguage 
+                                               {
+                                                shouldShowTranslationView = true
+                                                print("✅ [TranslationSection] shouldShowTranslationView set to TRUE - Translation initiated")
+                                                print("Translation initiated with source language: \(sourceLang.languageCode ?? "Not Set")")
+                                                print("Target language: \(targetLang.languageCode ?? "Not Set")")
+                                            } else if translationUIStyle == .modalSheet {
+                                                showTranslationSheet = true
+                                            }
                                         }
-                                    }
-                                },
-                                errorMessage: errorMessage
-                            )
-                            .padding(.bottom, 15) // Space below button
-                            .frame(maxWidth: .infinity, alignment: .center)
-                        }
+                                    },
+                                    errorMessage: errorMessage
+                                )
+                                .padding(.bottom, 15)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                            }
 
-                        // Full-height divider
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 1)
-                            .frame(maxHeight: .infinity)
-                    }
-                    .frame(width: dividerWidth) // Set explicit width for this section
-
-                    // Right side - Translation
-                    VStack {
-                        if shouldShowTranslationView {
-                            TranslationView(
-                                sourceText: recognizedText,
-                                sourceLanguage: sourceLanguage,
-                                targetLanguage: targetLanguage
-                            )
-                            .padding()
-                        } else {
-                            Spacer()
+                            // Full-height divider
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 1)
+                                .frame(maxHeight: .infinity)
                         }
+                        .frame(width: dividerWidth)
+
+                        // Right side - Translation
+                        VStack {
+                            if shouldShowTranslationView {
+                                TranslationView(
+                                    sourceText: recognizedText,
+                                    sourceLanguage: sourceLanguage,
+                                    targetLanguage: targetLanguage
+                                )
+                                .padding()
+                            } else {
+                                Spacer()
+                            }
+                        }
+                        .frame(width: textSectionWidth)
                     }
-                    .frame(width: textSectionWidth) // Match left side
+                    .frame(maxHeight: .infinity, alignment: .top)
                 }
             }
-
         }
         .if(translationUIStyle == .modalSheet) { view in
             view.translationPresentation(isPresented: $showTranslationSheet, text: recognizedText)

@@ -18,14 +18,13 @@ struct RecognizedTextView: View {
             if !recognizedText.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(recognizedText)
-                        .lineLimit(showFullText ? nil : 8)
+                        .lineLimit(nil) // No line limit - show all text
                         .fixedSize(horizontal: false, vertical: true) // Allow multiline
-                        .padding(.horizontal)
+                        .padding(.horizontal, 16) // Minimal horizontal padding
                     
                 }
             }
         }
-        .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .onChange(of: recognizedText) {
             showFullText = false // Reset "Show More" button when text changes

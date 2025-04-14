@@ -47,7 +47,7 @@ struct TranslationView: View {
             if !translatedText.isEmpty {
                 Text(translatedText)
                     .font(.body)
-                    .padding()
+                    .padding(.horizontal, 16) // 16 points of horizontal padding
                     .fixedSize(horizontal: false, vertical: true) // Ensures text wraps properly
                     .frame(maxWidth: .infinity, alignment: .leading) // Allow text to use full width
             }
@@ -57,20 +57,20 @@ struct TranslationView: View {
                         .padding(.trailing, 8)
                     Text("Translating...")
                 }
-                .padding()
+                .padding(.horizontal, 16) // 16 points of horizontal padding
             }
             else if translationError != nil {
                 Text("Translation error: \(String(describing: translationError))")
                     .foregroundColor(.red)
-                    .padding()
+                    .padding(.horizontal, 16) // 16 points of horizontal padding
             }
             else {
                 Text("Waiting for translation...")
                     .foregroundColor(.gray)
-                    .padding()
+                    .padding(.horizontal, 16) // 16 points of horizontal padding
             }
         }
-        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading) // Match RecognizedTextView
         .translationTask(configuration) { session in
             do {
                 let response = try await session.translate(sourceText)
