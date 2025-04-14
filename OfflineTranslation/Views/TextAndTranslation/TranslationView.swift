@@ -42,64 +42,70 @@ struct TranslationView: View {
         self.targetLanguage = targetLanguage!
     }    
     
-var body: some View {
-    ScrollView { // Makes the entire view scrollable
-        VStack(alignment: .leading, spacing: 12) { // Leading alignment for all elements
-            if !translatedText.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(translatedText)
-                        .padding(.horizontal)
-                        .fixedSize(horizontal: false, vertical: true) // Ensures text wraps properly
-                        .frame(maxWidth: .infinity, alignment: .leading)
+    var body: some View {
+        ScrollView { // Makes the entire view scrollable
+            VStack(alignment: .leading, spacing: 12) { // Leading alignment for all elements
+                if !translatedText.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(translatedText)
+                            .padding(.horizontal)
+                            .foregroundColor(.primary) // Ensure text uses primary color
+                            .font(.body.bold()) // Make text bold for visibility
+                            .fixedSize(horizontal: false, vertical: true) // Ensures text wraps properly
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.yellow.opacity(0.1)) // Add subtle background for debugging
+                    }
+                    .onAppear {
+                        print("[TranslationView] Now displaying translated text: \(translatedText)")
+                    }
+                }
+                else if isTranslating {
+                    VStack(alignment: .leading, spacing: 8) { // Change to VStack for text wrapping
+                        Text("Translating...")
+                            .fixedSize(horizontal: false, vertical: true) // Ensures wrapping
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        ProgressView()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                else if translationError != nil {
+                    VStack(alignment: .leading, spacing: 8) { // Change to VStack for text wrapping
+                        Text("Translation error: \(String(describing: translationError))")
+                            .foregroundColor(.red)
+                            .fixedSize(horizontal: false, vertical: true) // Ensures wrapping
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                else {
+                    Text("No translation yet.") // Dummy View to satisfy SwiftUI
+                        .hidden() // Prevents UI clutter but keeps SwiftUI structure valid
                 }
             }
-            else if isTranslating {
-                VStack(alignment: .leading, spacing: 8) { // Change to VStack for text wrapping
-                    Text("Translating...")
-                        .fixedSize(horizontal: false, vertical: true) // Ensures wrapping
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    ProgressView()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding() // Adds padding to prevent text from touching the screen edges
+        }        
+        .translationTask(configuration) { session in
+                do {
+                    let response = try await session.translate(sourceText)
+                    isTranslating = false
+                    translatedText = response.targetText
+                    print("Translation View: TRANSLATED TEXT: \(translatedText)")
+                } catch {
+                    translationError = error
+                    isTranslating = false
+                    configuration?.invalidate()
+                    print("Translation error: \(error.localizedDescription)")
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            else if translationError != nil {
-                VStack(alignment: .leading, spacing: 8) { // Change to VStack for text wrapping
-                    Text("Translation error: \(String(describing: translationError))")
-                        .foregroundColor(.red)
-                        .fixedSize(horizontal: false, vertical: true) // Ensures wrapping
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            .onAppear {
+                print("Translation View: Starting translation...")
+                print("Source Text: \(sourceText), Source Language: \(String(describing: sourceLanguage)), Target Language: \(String(describing: targetLanguage))")
+                if translatedText.isEmpty && !isTranslating && translationError == nil {
+                    print("Translation View: NOT TRANSLATING")
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                startTranslation()
             }
-            else {
-                Text("No translation yet.") // Dummy View to satisfy SwiftUI
-                    .hidden() // Prevents UI clutter but keeps SwiftUI structure valid
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding() // Adds padding to prevent text from touching the screen edges
-    }        
-    .translationTask(configuration) { session in
-            do {
-                let response = try await session.translate(sourceText)
-                isTranslating = false
-                translatedText = response.targetText
-                print("Translation View: TRANSLATED TEXT: \(translatedText)")
-            } catch {
-                translationError = error
-                isTranslating = false
-                configuration?.invalidate()
-                print("Translation error: \(error.localizedDescription)")
-            }
-        }
-        .onAppear {
-            print("Translation View: Starting translation...")
-            print("Source Text: \(sourceText), Source Language: \(String(describing: sourceLanguage)), Target Language: \(String(describing: targetLanguage))")
-            if translatedText.isEmpty && !isTranslating && translationError == nil {
-                print("Translation View: NOT TRANSLATING")
-            }
-            startTranslation()
-        }
     }
     
     private func startTranslation() {
